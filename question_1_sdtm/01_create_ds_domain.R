@@ -38,41 +38,68 @@ raw_ds <- raw_ds %>%
 print (raw_ds)
 
 
-#-- 2. Define VISITNUM Lookup Table ---
-### Making a personal lookup table for the purpose of this assessment
 
-unique(raw_ds$INSTANCE)
 
-visitnum_lookup <- data.frame(
+# ---2.Derive DSTERM, DSDECOD and DSCAT based on eCRF logic ---
+### DSTERM  - IF OTHERSP not null → OTHERSP, ELSE IT.DSTERM
+### DSDECOD - IF OTHERSP not null → OTHERSP, ELSE IT.DSDECOD
+### DSCAT   - IF DSDECOD = "Randomized"      → "PROTOCOL MILESTONE"
+#           ELSE IF OTHERSP not null        → "OTHER EVENT"
+#           ELSE                            → "DISPOSITION EVENT"
+raw_ds <- raw_ds %>%
+  mutate(
+    DSTERM_raw = case_when(
+      !is.na(OTHERSP) & OTHERSP != "" ~ OTHERSP,
+      TRUE                             ~ IT.DSTERM
+    ),
+    DSDECOD_raw = case_when(
+      !is.na(OTHERSP) & OTHERSP != "" ~ toupper(OTHERSP), #To match some DSDECOD values in CT
+      TRUE                             ~ toupper(IT.DSDECOD)
+    ),
+    DSCAT = case_when(
+      IT.DSDECOD == "Randomized"       ~ "PROTOCOL MILESTONE",
+      !is.na(OTHERSP) & OTHERSP != "" ~ "OTHER EVENT",
+      TRUE                             ~ "DISPOSITION EVENT"
+    ), 
+    VISIT_raw = toupper(INSTANCE) # To match VISIT CT
+  )
+
+### Verify all three
+raw_ds %>%
+  select(IT.DSTERM, IT.DSDECOD, OTHERSP, DSTERM_raw, DSDECOD_raw, DSCAT) %>%
+  distinct() %>%
+  print(n = 30)
+
+
+
+# 3. Visitnum in CT but noticed that not all Unscheduled are included
+# Standard visits: use CT file
+# Unscheduled visits: manual lookup (not in CT)
+
+unscheduled_lkp <- data.frame(
   INSTANCE = c(
-    "Screening 1", "Baseline",
-    "Week 2", "Week 4", "Week 6", "Week 8",
-    "Week 12", "Week 16", "Week 20", "Week 24", "Week 26",
-    "Ambul Ecg Removal", "Retrieval",
     "Unscheduled 1.1", "Unscheduled 4.1", "Unscheduled 5.1",
     "Unscheduled 6.1", "Unscheduled 8.2", "Unscheduled 13.1"
   ),
-  VISITNUM = c(
-    -28, 1, 2, 4, 6, 8, 12, 16, 20, 24, 26,
-    888, 9000,
-    99, 99, 99, 99, 99, 99
-  )
+  VISITNUM_Unsch = c(1.1, 4.1, 5.1, 6.1, 8.2, 13.1)
 )
 
-### Join VISITNUM to ds_raw
+# Join manual lookup to raw_ds
 raw_ds <- raw_ds %>%
-  left_join(visitnum_lookup, by = "INSTANCE")
+  left_join(unscheduled_lkp, by = "INSTANCE")
 
-### Verify mapping & no missing visitnum
+# Verify
 raw_ds %>%
-  select(INSTANCE, VISITNUM) %>%
+  select(INSTANCE, VISITNUM_Unsch) %>%
   distinct() %>%
-  arrange(VISITNUM) %>%
+  arrange(VISITNUM_Unsch) %>%
   print(n = 25)
 
-#----3. Map Basic Variables (No Controlled Terminology needed)
 
-### STUDYID - Study Identifier
+# 4.  Map Variables ---
+
+
+# STUDYID - Study Identifier (no CT needed)
 STUDYID <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "STUDY",
@@ -80,7 +107,7 @@ STUDYID <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-### USUBJID - Unique Subject Identifier
+# USUBJID - Unique Subject Identifier (no CT needed)
 USUBJID <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "PATNUM",
@@ -88,34 +115,61 @@ USUBJID <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-### VISIT - Visit Name
-VISIT <- assign_no_ct(
-  raw_dat = raw_ds,
-  raw_var = "INSTANCE",
-  tgt_var = "VISIT",
-  id_vars = oak_id_vars()
-)
-
-### DSTERM - Reported Term for Disposition
+# DSTERM - Reported Term (no CT, uses eCRF derived column)
 DSTERM <- assign_no_ct(
   raw_dat = raw_ds,
-  raw_var = "IT.DSTERM",
+  raw_var = "DSTERM_raw",
   tgt_var = "DSTERM",
   id_vars = oak_id_vars()
 )
 
+# DSDECOD - Preferred Term with some values in CT all capitalized so did it for all
+DSDECOD <- assign_no_ct(
+  raw_dat = raw_ds,
+  raw_var = "DSDECOD_raw",
+  tgt_var = "DSDECOD",
+  id_vars = oak_id_vars()
+)
 
-# Preview
+# VISIT - uppercase of INSTANCE (no CT needed)
+VISIT <- assign_no_ct(
+  raw_dat = raw_ds,
+  raw_var = "VISIT_raw",
+  tgt_var = "VISIT",
+  id_vars = oak_id_vars()
+)
+
+
+# DOMAIN - hardcoded to "DS"
+DOMAIN <- hardcode_no_ct(
+  raw_dat = raw_ds,
+  raw_var = "PATNUM",
+  tgt_var = "DOMAIN",
+  tgt_val = "DS",
+  id_vars = oak_id_vars()
+)
+
+# VISITNUM - using CT codelist VISITNUM
+# Unscheduled visits filled from manual lookup
+VISITNUM <- assign_ct(
+  raw_dat = raw_ds,
+  raw_var = "INSTANCE",
+  tgt_var = "VISITNUM",
+  ct_spec = study_ct,
+  ct_clst = "VISITNUM",
+  id_vars = oak_id_vars()
+)
+
+
+
 print(head(STUDYID))
 print(head(USUBJID))
-print(head(VISIT))
 print(head(DSTERM))
-
-
-
-
-
-
+print(head(DOMAIN))
+print(head(VISIT))
+print(head(VISITNUM))
+print(head(DSDECOD))
+print(head(DSCAT))
 
 
 
