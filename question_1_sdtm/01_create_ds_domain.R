@@ -229,7 +229,7 @@ ds <- STUDYID %>%
 # --- 7. Derive DSSEQ ---
    derive_seq(
     tgt_var = "DSSEQ",
-    rec_vars = c("USUBJID", "DSSTDTC")) %>%
+    rec_vars = c("USUBJID","DSSTDTC","DSDECOD", "DSCAT")) %>%
   
 # --- 8. Derive DSSTDY ---
   derive_study_day(
@@ -275,7 +275,7 @@ sink(log_file, split = TRUE)
 cat("============================================================\n")
 cat("SDTM DS Domain Log\n")
 cat(paste("03/17/2026:", Sys.time(), "\n"))
-cat("Author: Adashi 0dama")
+cat("Author:Adashi Odama")
 cat("Script: 01_create_ds_domain.R\n")
 cat("============================================================\n\n")
 
