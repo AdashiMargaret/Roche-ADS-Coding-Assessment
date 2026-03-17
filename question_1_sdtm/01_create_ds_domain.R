@@ -73,8 +73,8 @@ raw_ds %>%
 
 
 # 3. Visitnum in CT but noticed that not all Unscheduled are included
-# Standard visits: use CT file
-# Unscheduled visits: manual lookup (not in CT)
+### Standard visits: use CT file
+###Unscheduled visits: manual lookup (some not in CT but will follow the format)
 
 unscheduled_lkp <- data.frame(
   INSTANCE = c(
@@ -84,11 +84,11 @@ unscheduled_lkp <- data.frame(
   VISITNUM_Unsch = c(1.1, 4.1, 5.1, 6.1, 8.2, 13.1)
 )
 
-# Join manual lookup to raw_ds
+### Join manual lookup to raw_ds
 raw_ds <- raw_ds %>%
   left_join(unscheduled_lkp, by = "INSTANCE")
 
-# Verify
+### Verify
 raw_ds %>%
   select(INSTANCE, VISITNUM_Unsch) %>%
   distinct() %>%
@@ -99,7 +99,7 @@ raw_ds %>%
 # 4.  Map Variables ---
 
 
-# STUDYID - Study Identifier (no CT needed)
+### STUDYID - Study Identifier (no CT needed)
 STUDYID <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "STUDY",
@@ -107,7 +107,7 @@ STUDYID <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-# USUBJID - Unique Subject Identifier (no CT needed)
+### USUBJID - Unique Subject Identifier (no CT needed)
 USUBJID <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "PATNUM",
@@ -115,7 +115,7 @@ USUBJID <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-# DSTERM - Reported Term (no CT, uses eCRF derived column)
+### DSTERM - Reported Term (no CT, uses eCRF derived column)
 DSTERM <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "DSTERM_raw",
@@ -123,7 +123,7 @@ DSTERM <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-# DSDECOD - Preferred Term with some values in CT all capitalized so did it for all
+### DSDECOD - Preferred Term with some values in CT all capitalized so did it for all
 DSDECOD <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "DSDECOD_raw",
@@ -131,7 +131,7 @@ DSDECOD <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-# VISIT - uppercase of INSTANCE (no CT needed)
+### VISIT - uppercase of INSTANCE (no CT needed)
 VISIT <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "VISIT_raw",
@@ -140,7 +140,7 @@ VISIT <- assign_no_ct(
 )
 
 
-# DOMAIN - hardcoded to "DS"
+### DOMAIN - hardcoded to "DS"
 DOMAIN <- hardcode_no_ct(
   raw_dat = raw_ds,
   raw_var = "PATNUM",
@@ -149,7 +149,7 @@ DOMAIN <- hardcode_no_ct(
   id_vars = oak_id_vars()
 )
 
-# VISITNUM - using CT codelist VISITNUM
+### VISITNUM - using CT codelist VISITNUM
 # Unscheduled visits filled from manual lookup
 VISITNUM <- assign_ct(
   raw_dat = raw_ds,
