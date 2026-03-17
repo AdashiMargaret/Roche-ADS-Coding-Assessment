@@ -4,6 +4,17 @@ Solutions to the Roche ADS Programmer Coding Assessment covering Pharmaverse (R)
 
 ---
 
+## Progress
+
+| # | Question | Status |
+|---|----------|--------|
+| 1 | SDTM DS Domain Creation | ✅ Complete |
+| 2 | ADaM ADSL Dataset Creation | 🔄 In Progress |
+| 3 | TLG – Adverse Events Reporting | 🔄 In Progress |
+| 4 | GenAI Clinical Data Assistant *(Bonus)* | 🔄 In Progress |
+
+---
+
 ## Repository Structure
 
 ```
@@ -17,19 +28,56 @@ roche-ads-coding-assessment/
 
 ---
 
-## Question 1: SDTM DS Domain Creation (`question_1_sdtm/`)
+## Question 1: SDTM DS Domain Creation (`question_1_sdtm/`) ✅
 
-**Objective:** Create an SDTM Disposition (DS) domain dataset from raw clinical trial data using the `{sdtm.oak}` package.
+**Objective:** Create an SDTM Disposition (DS) domain dataset from raw clinical trial eCRF data using the `{sdtm.oak}` package.
 
 | File | Description |
 |------|-------------|
 | `01_create_ds_domain.R` | Main script to create the DS domain |
-| `ds_domain.rds` | Output DS dataset |
-| `01_create_ds_domain.log` | Log file confirming error-free execution |
+| `sdtm_ct.csv` | Study controlled terminology lookup (external input) |
+| `ds_domain.rds` | Output DS dataset (RDS format) |
+| `ds_domain.csv` | Output DS dataset (CSV format) |
+| `SDTM.DS.log.txt` | Log file confirming error-free execution |
 
-**Input:** `pharmaverseraw::ds_raw`
+**Inputs:**
+- `pharmaverseraw::ds_raw` — raw eCRF disposition data
+- `pharmaversesdtm::dm` — DM domain (for `RFSTDTC` used in study day derivation)
+- `sdtm_ct.csv` — study controlled terminology file
+
 **Output variables:** STUDYID, DOMAIN, USUBJID, DSSEQ, DSTERM, DSDECOD, DSCAT, VISITNUM, VISIT, DSDTC, DSSTDTC, DSSTDY
-**Key packages:** `sdtm.oak`, `pharmaverseraw`, `dplyr`
+
+**Key packages:** `sdtm.oak`, `pharmaverseraw`, `pharmaversesdtm`, `dplyr`
+
+**Approach:**
+
+1. **Oak ID Variables** — `generate_oak_id_vars(pat_var = "PATNUM")` applied to raw data to generate `oak_id` linking keys.
+
+2. **eCRF Derivation Logic (pre-mapping `mutate`):**
+   - `DSTERM`: if `OTHERSP` is populated → use `OTHERSP`; else use `IT.DSTERM`
+   - `DSDECOD`: if `OTHERSP` is populated → uppercase `OTHERSP`; else uppercase `IT.DSDECOD`
+   - `DSCAT`:
+     - `"PROTOCOL MILESTONE"` — when `IT.DSDECOD = "Randomized"`
+     - `"OTHER EVENT"` — when `OTHERSP` is populated
+     - `"DISPOSITION EVENT"` — all other records
+   - `VISIT`: uppercase of `INSTANCE` for CT consistency
+
+3. **VISITNUM** — derived via a custom 22-entry lookup table (covering scheduled and unscheduled visits), left-joined by `INSTANCE`.
+
+4. **USUBJID Fix** — raw `ds_raw` lacked the `"01-"` prefix present in parent dataset `dm`; resolved by constructing `USUBJID = paste0("01-", PATNUM)` pending raw data correction.
+
+5. **Variable Mapping (`{sdtm.oak}` functions):**
+   - `assign_no_ct()` → STUDYID, USUBJID, DSTERM, DSDECOD, VISIT
+   - `hardcode_no_ct()` → DOMAIN (`"DS"`)
+   - `assign_datetime()` → DSDTC (from `DSDTCOL` + `DSTMCOL`, format `"m-d-y" / "H:M"`), DSSTDTC (from `IT.DSSTDAT`, format `"m-d-y"`)
+
+6. **Combine** — individual mapped datasets joined by `oak_id`; VISITNUM and DSCAT added via `mutate`.
+
+7. **DSSEQ** — derived using `derive_seq(rec_vars = c("USUBJID", "DSSTDTC"))`.
+
+8. **DSSTDY** — derived using `derive_study_day()` against `RFSTDTC` from `dm`.
+
+9. **Output** — final dataset selected to 12 required SDTM variables, saved as `.rds` and `.csv`; execution log written to `SDTM.DS.log.txt`.
 
 ---
 
