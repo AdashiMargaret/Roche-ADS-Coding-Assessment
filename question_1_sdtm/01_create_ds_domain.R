@@ -274,8 +274,8 @@ sink(log_file, split = TRUE)
 
 cat("============================================================\n")
 cat("SDTM DS Domain Creation Log\n")
-cat(paste("Run Date:", Sys.time(), "\n"))
-cat("Author: Your Name\n")
+cat(paste("03/17/2026:", Sys.time(), "\n"))
+cat("Author: Adashi Odama")
 cat("Script: 01_create_ds_domain.R\n")
 cat("============================================================\n\n")
 
