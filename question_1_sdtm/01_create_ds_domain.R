@@ -273,9 +273,9 @@ log_file <- "SDTM.DS.log.txt"
 sink(log_file, split = TRUE)
 
 cat("============================================================\n")
-cat("SDTM DS Domain Creation Log\n")
+cat("SDTM DS Domain Log\n")
 cat(paste("03/17/2026:", Sys.time(), "\n"))
-cat("Author: Adashi Odama")
+cat("Author: Adashi 0dama")
 cat("Script: 01_create_ds_domain.R\n")
 cat("============================================================\n\n")
 
