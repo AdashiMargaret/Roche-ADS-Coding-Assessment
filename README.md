@@ -73,7 +73,7 @@ roche-ads-coding-assessment/
 
 6. **Combine** — individual mapped datasets joined by `oak_id`; VISITNUM and DSCAT added via `mutate`.
 
-7. **DSSEQ** — derived using `derive_seq(rec_vars = c("USUBJID", "DSSTDTC"))`.
+7. **DSSEQ** — derived using `derive_seq(rec_vars = c("USUBJID", "DSSTDTC", "DSDECOD", "DSCAT"))`.
 
 8. **DSSTDY** — derived using `derive_study_day()` against `RFSTDTC` from `dm`.
 
