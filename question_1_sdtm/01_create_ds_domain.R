@@ -23,6 +23,10 @@ print(raw_ds)
 #Read in Study CT---
 study_ct <- read.csv("sdtm_ct.csv", stringsAsFactors = FALSE)
 
+#Bringing in Demographics (DM)
+
+dm <- pharmaversesdtm::dm 
+
 #Check data formats
 print(str(raw_ds))
 print(head(study_ct))
@@ -72,27 +76,37 @@ raw_ds %>%
 
 
 
-#--- 3. Visitnum in CT but noticed that not all Unscheduled are included-----
-### Standard visits: use CT file
-###Unscheduled visits: manual lookup (some not in CT but will follow the format)
+#--- 3.Define complete VISITNUM lookup table (based on CT file) ---
+### Some unscheduled visits not included in CT so hardcoding to maintain consistency
 
-unscheduled_lkp <- data.frame(
+unique(raw_ds$INSTANCE)
+
+visitnum_lkp <- data.frame(
   INSTANCE = c(
+    "Screening 1", "Screening", "Screening 2", "Baseline",
+    "Week 2", "Week 4", "Week 6", "Week 8",
+    "Week 12", "Week 16", "Week 20", "Week 24", "Week 26",
+    "Ambul Ecg Removal", "Retrieval",
     "Unscheduled 1.1", "Unscheduled 4.1", "Unscheduled 5.1",
     "Unscheduled 6.1", "Unscheduled 8.2", "Unscheduled 13.1"
   ),
-  VISITNUM_Unsch = c(1.1, 4.1, 5.1, 6.1, 8.2, 13.1)
+  VISITNUM = c(
+    1,1, 2, 3,
+    4, 5, 7, 8, 9, 10, 11, 12, 13,
+    6, 201,
+    1.1, 4.1, 5.1,
+    6.1, 8.2, 13.1
+  )
 )
 
-### Join manual lookup to raw_ds
 raw_ds <- raw_ds %>%
-  left_join(unscheduled_lkp, by = "INSTANCE")
+  left_join(visitnum_lkp, by = "INSTANCE")
 
 ### Verify
 raw_ds %>%
-  select(INSTANCE, VISITNUM_Unsch) %>%
+  select(INSTANCE, VISITNUM) %>%
   distinct() %>%
-  arrange(VISITNUM_Unsch) %>%
+  arrange(VISITNUM) %>%
   print(n = 25)
 
 
@@ -108,9 +122,17 @@ STUDYID <- assign_no_ct(
 )
 
 ### USUBJID - Unique Subject Identifier (no CT needed)
+
+###Noticed a prefix "01" before the PATNUM in DM that is not present in raw DS. Under the assumption
+### that this is a raw data issue which is common, will be adding the prefix to DS to match parent dataset DM
+##Until raw data is hopefully fixed after issue is logged and sent for resolution ----
+
+raw_ds <- raw_ds %>%
+  mutate(USUBJID_fmt = paste0("01-", PATNUM))
+
 USUBJID <- assign_no_ct(
   raw_dat = raw_ds,
-  raw_var = "PATNUM",
+  raw_var = "USUBJID_fmt",
   tgt_var = "USUBJID",
   id_vars = oak_id_vars()
 )
@@ -149,16 +171,6 @@ DOMAIN <- hardcode_no_ct(
   id_vars = oak_id_vars()
 )
 
-### VISITNUM - using CT codelist VISITNUM
-# Unscheduled visits filled from manual lookup
-VISITNUM <- assign_ct(
-  raw_dat = raw_ds,
-  raw_var = "INSTANCE",
-  tgt_var = "VISITNUM",
-  ct_spec = study_ct,
-  ct_clst = "VISITNUM",
-  id_vars = oak_id_vars()
-)
 
 
 
@@ -172,7 +184,7 @@ print(head(DSDECOD))
 print(head(DSCAT))
 
 
-# ---5. Datetime Derivations
+# ---5. Datetime Derivations----
 
 ### DSDTC - Date/Time of Collection (date + time combined)
 DSDTC <- assign_datetime(
@@ -198,3 +210,47 @@ DSSTDTC <- assign_datetime(
 print(head(DSDTC))
 print(head(DSSTDTC))
 
+
+
+#---6. Combine Datasets---
+
+ds <- STUDYID %>%
+  left_join(DOMAIN,   by = "oak_id") %>%
+  left_join(USUBJID,  by = "oak_id") %>%
+  left_join(DSTERM,   by = "oak_id") %>%
+  left_join(DSDECOD,  by = "oak_id") %>%
+  left_join(VISIT,    by = "oak_id") %>%
+  left_join(VISITNUM, by = "oak_id") %>%
+  left_join(DSDTC,    by = "oak_id") %>%
+  left_join(DSSTDTC,  by = "oak_id") %>%
+  
+ mutate(VISITNUM = ifelse(
+   raw_ds$VISITNUM == floor(raw_ds$VISITNUM),
+   as.integer(raw_ds$VISITNUM),
+   raw_ds$VISITNUM
+ ),
+    DSCAT = raw_ds$DSCAT) %>%
+  
+# --- 7. Derive DSSEQ ---
+   derive_seq(
+    tgt_var = "DSSEQ",
+    rec_vars = c("USUBJID", "DSSTDTC")) %>%
+  
+# --- 8. Derive DSSTDY ---
+  derive_study_day(
+    sdtm_in = .,
+    dm_domain = dm,
+    tgdt = "DSSTDTC",
+    refdt = "RFSTDTC",
+    study_day_var = "DSSTDY") %>%
+  
+# --- 9. Select final SDTM variables ---
+  select(
+    "STUDYID", "DOMAIN", "USUBJID", "DSSEQ",
+    "DSTERM", "DSDECOD", "DSCAT",
+    "VISITNUM", "VISIT",
+    "DSDTC", "DSSTDTC", "DSSTDY"
+  )
+
+# Preview
+print(head(ds))
