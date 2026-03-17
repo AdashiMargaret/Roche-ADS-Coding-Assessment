@@ -20,7 +20,7 @@ raw_ds <- pharmaverseraw::ds_raw
 #view dataset
 print(raw_ds)
 
-#Read in Study CT
+#Read in Study CT---
 study_ct <- read.csv("sdtm_ct.csv", stringsAsFactors = FALSE)
 
 #Check data formats
@@ -28,7 +28,7 @@ print(str(raw_ds))
 print(head(study_ct))
 
 
-#---1. Generate OAK ID variables to link raw data to SDTM
+#---1. Generate OAK ID variables to link raw data to SDTM---
 
 raw_ds <- raw_ds %>%
   generate_oak_id_vars(
@@ -72,7 +72,7 @@ raw_ds %>%
 
 
 
-# 3. Visitnum in CT but noticed that not all Unscheduled are included
+#--- 3. Visitnum in CT but noticed that not all Unscheduled are included-----
 ### Standard visits: use CT file
 ###Unscheduled visits: manual lookup (some not in CT but will follow the format)
 
@@ -96,7 +96,7 @@ raw_ds %>%
   print(n = 25)
 
 
-# 4.  Map Variables ---
+# ---4.  Map Variables ---
 
 
 ### STUDYID - Study Identifier (no CT needed)
@@ -172,7 +172,29 @@ print(head(DSDECOD))
 print(head(DSCAT))
 
 
+# ---5. Datetime Derivations
+
+### DSDTC - Date/Time of Collection (date + time combined)
+DSDTC <- assign_datetime(
+  raw_dat = raw_ds,
+  raw_var = c("DSDTCOL", "DSTMCOL"),
+  tgt_var = "DSDTC",
+  raw_fmt = c("m-d-y","H:M"),
+  raw_unk = c("UN", "UNK"),
+  id_vars = oak_id_vars()
+)
 
 
+### DSSTDTC - Start Date/Time of Disposition Event
+DSSTDTC <- assign_datetime(
+  raw_dat = raw_ds,
+  raw_var = c("IT.DSSTDAT"),
+  tgt_var = "DSSTDTC",
+  raw_fmt = c("m-d-y"),
+  raw_unk = c("UN", "UNK"),
+  id_vars = oak_id_vars()
+)
 
+print(head(DSDTC))
+print(head(DSSTDTC))
 
