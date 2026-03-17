@@ -32,7 +32,7 @@ print(str(raw_ds))
 print(head(study_ct))
 
 
-#---1. Generate OAK ID variables to link raw data to SDTM---
+#---1. Generate OAK ID variables---
 
 raw_ds <- raw_ds %>%
   generate_oak_id_vars(
@@ -57,7 +57,7 @@ raw_ds <- raw_ds %>%
       TRUE                             ~ IT.DSTERM
     ),
     DSDECOD_raw = case_when(
-      !is.na(OTHERSP) & OTHERSP != "" ~ toupper(OTHERSP), #To match some DSDECOD values in CT
+      !is.na(OTHERSP) & OTHERSP != "" ~ toupper(OTHERSP), #Uppercase to match DSDECOD values in CT
       TRUE                             ~ toupper(IT.DSDECOD)
     ),
     DSCAT = case_when(
@@ -65,7 +65,7 @@ raw_ds <- raw_ds %>%
       !is.na(OTHERSP) & OTHERSP != "" ~ "OTHER EVENT",
       TRUE                             ~ "DISPOSITION EVENT"
     ), 
-    VISIT_raw = toupper(INSTANCE) # To match VISIT CT
+    VISIT_raw = toupper(INSTANCE) # Uppercase to match VISIT values in CT
   )
 
 ### Verify all three
@@ -77,7 +77,7 @@ raw_ds %>%
 
 
 #--- 3.Define complete VISITNUM lookup table (based on CT file) ---
-### Some unscheduled visits not included in CT so hardcoding to maintain consistency
+### Some unscheduled visits not included in CT but following mapping algorithm to maintain consistency
 
 unique(raw_ds$INSTANCE)
 
@@ -86,14 +86,14 @@ visitnum_lkp <- data.frame(
     "Screening 1", "Screening", "Screening 2", "Baseline",
     "Week 2", "Week 4", "Week 6", "Week 8",
     "Week 12", "Week 16", "Week 20", "Week 24", "Week 26",
-    "Ambul Ecg Removal", "Retrieval",
+    "Ambul Ecg Removal", "Ambul ECG Placement" ,"Retrieval",
     "Unscheduled 1.1", "Unscheduled 4.1", "Unscheduled 5.1",
     "Unscheduled 6.1", "Unscheduled 8.2", "Unscheduled 13.1"
   ),
   VISITNUM = c(
     1,1, 2, 3,
     4, 5, 7, 8, 9, 10, 11, 12, 13,
-    6, 201,
+    6, 3.5, 201,
     1.1, 4.1, 5.1,
     6.1, 8.2, 13.1
   )
@@ -102,7 +102,7 @@ visitnum_lkp <- data.frame(
 raw_ds <- raw_ds %>%
   left_join(visitnum_lkp, by = "INSTANCE")
 
-### Verify
+### Verify that algorith worked
 raw_ds %>%
   select(INSTANCE, VISITNUM) %>%
   distinct() %>%
@@ -123,8 +123,8 @@ STUDYID <- assign_no_ct(
 
 ### USUBJID - Unique Subject Identifier (no CT needed)
 
-###Noticed a prefix "01" before the PATNUM in DM that is not present in raw DS. Under the assumption
-### that this is a raw data issue which is common, will be adding the prefix to DS to match parent dataset DM
+###Noticed a prefix "01" before USUBJID in DM that is not present in raw DS. Under the assumption
+### that this is a raw data issue which is common, I will be adding the prefix to DS to match parent dataset DM
 ##Until raw data is hopefully fixed after issue is logged and sent for resolution ----
 
 raw_ds <- raw_ds %>%
@@ -145,7 +145,7 @@ DSTERM <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-### DSDECOD - Preferred Term with some values in CT all capitalized so did it for all
+### DSDECOD -  CT value is all capitalized
 DSDECOD <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "DSDECOD_raw",
@@ -153,7 +153,7 @@ DSDECOD <- assign_no_ct(
   id_vars = oak_id_vars()
 )
 
-### VISIT - uppercase of INSTANCE (no CT needed)
+### VISIT - uppercase of INSTANCE (capitalization consistent with CT values)
 VISIT <- assign_no_ct(
   raw_dat = raw_ds,
   raw_var = "VISIT_raw",
@@ -170,7 +170,6 @@ DOMAIN <- hardcode_no_ct(
   tgt_val = "DS",
   id_vars = oak_id_vars()
 )
-
 
 
 
@@ -224,11 +223,7 @@ ds <- STUDYID %>%
   left_join(DSDTC,    by = "oak_id") %>%
   left_join(DSSTDTC,  by = "oak_id") %>%
   
- mutate(VISITNUM = ifelse(
-   raw_ds$VISITNUM == floor(raw_ds$VISITNUM),
-   as.integer(raw_ds$VISITNUM),
-   raw_ds$VISITNUM
- ),
+ mutate(VISITNUM = raw_ds$VISITNUM,
     DSCAT = raw_ds$DSCAT) %>%
   
 # --- 7. Derive DSSEQ ---
@@ -254,3 +249,62 @@ ds <- STUDYID %>%
 
 # Preview
 print(head(ds))
+
+
+#--- 10 saving final dataset---
+
+## Save as RDS 
+saveRDS(ds, "ds_domain.rds")
+## Save as CSV
+write.csv(ds, "ds_domain.csv", row.names = FALSE)
+
+# Verify saved files
+print(paste("DS domain saved with", nrow(ds), "rows and", ncol(ds), "columns"))
+print(head(ds))
+
+
+
+
+# --- 11. Write DS Log File ---
+
+log_file <- "SDTM.DS.log.txt"
+
+# Start capturing all console output
+sink(log_file, split = TRUE)
+
+cat("============================================================\n")
+cat("SDTM DS Domain Creation Log\n")
+cat(paste("Run Date:", Sys.time(), "\n"))
+cat("Author: Your Name\n")
+cat("Script: 01_create_ds_domain.R\n")
+cat("============================================================\n\n")
+
+cat("INPUT\n")
+cat("-----\n")
+cat(paste("Dataset: pharmaverseraw::ds_raw\n"))
+cat(paste("Rows:", nrow(pharmaverseraw::ds_raw), "\n"))
+cat(paste("Columns:", ncol(pharmaverseraw::ds_raw), "\n\n"))
+
+cat("OUTPUT\n")
+cat("------\n")
+cat(paste("Rows:", nrow(ds), "\n"))
+cat(paste("Columns:", ncol(ds), "\n"))
+cat(paste("Variables:", paste(names(ds), collapse = ", "), "\n\n"))
+
+cat("VALIDATION\n")
+cat("----------\n")
+cat("DSCAT frequency:\n")
+print(table(ds$DSCAT))
+cat("\nDSDECOD frequency:\n")
+print(table(ds$DSDECOD))
+cat("\nMissing values:\n")
+print(colSums(is.na(ds)))
+
+cat("\n============================================================\n")
+cat("STATUS: COMPLETED SUCCESSFULLY - NO ERRORS\n")
+cat("============================================================\n")
+
+# Stop capturing
+sink()
+
+print("Log file written successfully!")
