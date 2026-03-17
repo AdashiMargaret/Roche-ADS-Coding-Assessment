@@ -1,8 +1,7 @@
 ============================================================
-SDTM DS Domain Creation Log
-Run Date: 2026-03-17 18:30:44.165237 
-Author: Your Name
-Script: 01_create_ds_domain.R
+SDTM DS Domain Log
+03/17/2026: 2026-03-17 19:09:13.008868 
+Author:Adashi OdamaScript: 01_create_ds_domain.R
 ============================================================
 
 INPUT
