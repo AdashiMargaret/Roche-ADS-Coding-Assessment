@@ -1,6 +1,6 @@
 ============================================================
 SDTM DS Domain Log
-03/17/2026: 2026-03-17 20:11:46.548459 
+03/17/2026: 2026-03-18 04:06:23.249557 
 Author:Adashi OdamaScript: 01_create_ds_domain.R
 ============================================================
 
@@ -25,26 +25,18 @@ DSCAT frequency:
 
 DSDECOD frequency:
 
-              ADVERSE EVENT                   COMPLETED 
-                         92                         110 
-                      DEATH             FINAL LAB VISIT 
-                          3                         254 
-      FINAL RETRIEVAL VISIT            LACK OF EFFICACY 
-                         36                           4 
-          LOST TO FOLLOW-UP          PHYSICIAN DECISION 
-                          2                           3 
-         PROTOCOL VIOLATION                  RANDOMIZED 
-                          6                         254 
-             SCREEN FAILURE STUDY TERMINATED BY SPONSOR 
-                         52                           7 
+              ADVERSE EVENT                   COMPLETED                       DEATH             FINAL LAB VISIT 
+                         92                         110                           3                         254 
+      FINAL RETRIEVAL VISIT            LACK OF EFFICACY           LOST TO FOLLOW-UP          PHYSICIAN DECISION 
+                         36                           4                           2                           3 
+         PROTOCOL VIOLATION                  RANDOMIZED              SCREEN FAILURE STUDY TERMINATED BY SPONSOR 
+                          6                         254                          52                           7 
       WITHDRAWAL BY SUBJECT 
                          27 
 
 Missing values:
- STUDYID   DOMAIN  USUBJID    DSSEQ   DSTERM  DSDECOD    DSCAT VISITNUM    VISIT 
-       0        0        0        0        0        0        0        0        0 
-   DSDTC  DSSTDTC   DSSTDY 
-       0        0       52 
+ STUDYID   DOMAIN  USUBJID    DSSEQ   DSTERM  DSDECOD    DSCAT VISITNUM    VISIT    DSDTC  DSSTDTC   DSSTDY 
+       0        0        0        0        0        0        0        0        0        0        0       52 
 
 ============================================================
 STATUS: COMPLETED SUCCESSFULLY - NO ERRORS

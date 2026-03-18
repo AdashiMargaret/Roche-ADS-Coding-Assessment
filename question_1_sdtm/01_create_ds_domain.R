@@ -216,7 +216,7 @@ print(head(DSSTDTC))
 ds <- STUDYID %>%
   left_join(DOMAIN,   by = "oak_id") %>%
   left_join(USUBJID,  by = "oak_id") %>%
-  left_join(DSTERM,   by = "oak_id") %>%
+  left_join(DSTERM,  by = "oak_id") %>%
   left_join(DSDECOD,  by = "oak_id") %>%
   left_join(VISIT,    by = "oak_id") %>%
   left_join(VISITNUM, by = "oak_id") %>%
@@ -224,7 +224,8 @@ ds <- STUDYID %>%
   left_join(DSSTDTC,  by = "oak_id") %>%
   
  mutate(VISITNUM = raw_ds$VISITNUM,
-    DSCAT = raw_ds$DSCAT) %>%
+    DSCAT = raw_ds$DSCAT,
+    DSTERM = toupper(DSTERM)) %>%
   
 # --- 7. Derive DSSEQ ---
    derive_seq(
