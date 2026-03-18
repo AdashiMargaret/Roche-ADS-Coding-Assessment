@@ -7,12 +7,14 @@
 
 #Install and load important packages
 
-install.packages(c("sdtm.oak", "pharmaverseraw","pharmaversesdtm", "dplyr", "tidyr"))
+install.packages(c("sdtm.oak", "pharmaverseraw","pharmaversesdtm", "dplyr", "tidyr" , "labelled", "haven"))
 
 library(sdtm.oak)
 library(pharmaverseraw)
 library(pharmaversesdtm)
 library(dplyr)
+library(labelled)
+library(haven)
 
 #import raw dataset
 raw_ds <- pharmaverseraw::ds_raw
@@ -240,19 +242,48 @@ ds <- STUDYID %>%
     refdt = "RFSTDTC",
     study_day_var = "DSSTDY") %>%
   
+  
+  
+  
 # --- 9. Select final SDTM variables ---
   select(
     "STUDYID", "DOMAIN", "USUBJID", "DSSEQ",
     "DSTERM", "DSDECOD", "DSCAT",
     "VISITNUM", "VISIT",
-    "DSDTC", "DSSTDTC", "DSSTDY"
+    "DSDTC", "DSSTDTC", "DSSTDY" ) 
+  
+  
+
+
+# --- 10. Add Variable Labels ---
+
+
+ds <- ds %>%
+  set_variable_labels(
+    STUDYID = "Study Identifier",
+    DOMAIN = "Domain Abbreviation",
+    USUBJID = "Unique Subject Identifier",
+    DSSEQ = "Sequence Number",
+    DSTERM = "Reported Term for the Disposition Event",
+    DSDECOD = "Standardized Disposition Term",
+    DSCAT = "Category for Disposition Event",
+    VISITNUM = "Visit Number",
+    VISIT = "Visit Name",
+    DSDTC = "Date/Time of Collection",
+    DSSTDTC = "Start Date/Time of Disposition Event",
+    DSSTDY = "Study Day of Disposition Event"
   )
+
 
 # Preview
 print(head(ds))
 
 
-#--- 10 saving final dataset---
+
+
+
+
+#--- 11 saving final dataset---
 
 ## Save as RDS 
 saveRDS(ds, "ds_domain.rds")
@@ -266,17 +297,16 @@ print(head(ds))
 
 
 
-# --- 11. Write DS Log File ---
 
-log_file <- "SDTM.DS.log.txt"
+# --- 12. Write DS Log File ---
 
-# Start capturing all console output
-sink(log_file, split = TRUE)
+# Start capturing output to log file
+sink("01_create_ds_domain.log", split = TRUE)  # split=TRUE also shows in console
 
 cat("============================================================\n")
 cat("SDTM DS Domain Log\n")
 cat(paste("03/17/2026:", Sys.time(), "\n"))
-cat("Author:Adashi Odama")
+cat("Author: Adashi Odama")
 cat("Script: 01_create_ds_domain.R\n")
 cat("============================================================\n\n")
 

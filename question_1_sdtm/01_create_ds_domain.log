@@ -1,0 +1,43 @@
+============================================================
+SDTM DS Domain Log
+03/17/2026: 2026-03-18 09:28:20.652574 
+Author: Adashi OdamaScript: 01_create_ds_domain.R
+============================================================
+
+INPUT
+-----
+Dataset: pharmaverseraw::ds_raw
+Rows: 850 
+Columns: 13 
+
+OUTPUT
+------
+Rows: 850 
+Columns: 12 
+Variables: STUDYID, DOMAIN, USUBJID, DSSEQ, DSTERM, DSDECOD, DSCAT, VISITNUM, VISIT, DSDTC, DSSTDTC, DSSTDY 
+
+VALIDATION
+----------
+DSCAT frequency:
+
+ DISPOSITION EVENT        OTHER EVENT PROTOCOL MILESTONE 
+               306                290                254 
+
+DSDECOD frequency:
+
+              ADVERSE EVENT                   COMPLETED                       DEATH             FINAL LAB VISIT 
+                         92                         110                           3                         254 
+      FINAL RETRIEVAL VISIT            LACK OF EFFICACY           LOST TO FOLLOW-UP          PHYSICIAN DECISION 
+                         36                           4                           2                           3 
+         PROTOCOL VIOLATION                  RANDOMIZED              SCREEN FAILURE STUDY TERMINATED BY SPONSOR 
+                          6                         254                          52                           7 
+      WITHDRAWAL BY SUBJECT 
+                         27 
+
+Missing values:
+ STUDYID   DOMAIN  USUBJID    DSSEQ   DSTERM  DSDECOD    DSCAT VISITNUM    VISIT    DSDTC  DSSTDTC   DSSTDY 
+       0        0        0        0        0        0        0        0        0        0        0       52 
+
+============================================================
+STATUS: COMPLETED SUCCESSFULLY - NO ERRORS
+============================================================
