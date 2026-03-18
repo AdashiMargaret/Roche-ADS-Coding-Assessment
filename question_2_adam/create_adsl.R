@@ -324,8 +324,6 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
     
     
     
-    
-    
 #--- Step 7: Add Variable Labels to make ADSL coherent ---
 #     Using ADAM IG V1.3 for new variable labels 
     
@@ -359,4 +357,67 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
     
     
     print(adsl)
+    
+    
+  
+    
+    
+    
+#--- Step 8: Save Output Files ---
+    
+    # Save as RDS (R format - preserves data types and labels)
+    saveRDS(adsl, "adsl.rds")
+
+    
+    # Save as CSV (for external review)
+    write.csv(adsl, "adsl.csv", row.names = FALSE)
+    
+    
+    
+    
+    
+    
+#--- Step 9: Generate Log File ---
+    
+    # Start capturing output to log file
+    sink("create_adsl.log", split = TRUE)  # split=TRUE also shows in console
+    
+    cat("============================================================\n")
+    cat("ADaM ADSL Dataset Creation Log\n")
+    cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
+    cat("Script: create_adsl.R\n")
+    cat("============================================================\n\n")
+    
+    cat("SUMMARY OF DERIVATIONS\n")
+    cat("----------------------\n")
+    cat("Total Subjects:", nrow(adsl), "\n")
+    cat("Total Variables:", ncol(adsl), "\n\n")
+    
+    cat("CUSTOM DERIVED VARIABLES\n")
+    cat("------------------------\n")
+    cat("1. AGEGR9 & AGEGR9N - Age Grouping\n")
+    print(table(adsl$AGEGR9, useNA = "ifany"))
+    cat("\n")
+    
+    cat("2. TRTSDTM & TRTSTMF - Treatment Start DateTime\n")
+    cat("   Subjects with TRTSDTM:", sum(!is.na(adsl$TRTSDTM)), "\n")
+    cat("   TRTSTMF frequency:\n")
+    print(table(adsl$TRTSTMF, useNA = "ifany"))
+    cat("\n")
+    
+    cat("3. ITTFL - Intent-to-Treat Flag\n")
+    print(table(adsl$ITTFL, useNA = "ifany"))
+    cat("\n")
+    
+    cat("4. LSTAVLDT - Date Last Known Alive")
+    cat("   Subjects with LSTAVLDT:", sum(!is.na(adsl$LSTAVLDT)), "\n\n")
+    
+    cat("============================================================\n")
+    cat("STATUS: COMPLETED SUCCESSFULLY\n")
+    cat("============================================================\n")
+    
+    # Stop capturing to log file
+    sink()
+    
+    cat("\nLog file saved: create_adsl.log\n")
   
