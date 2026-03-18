@@ -54,6 +54,8 @@ cat("Base ADSL created with", nrow(adsl), "subjects\n\n")
 
 
 
+
+
 #---2: Derive AGEGR9 and AGEGR9N (Age Grouping) ---
 # Per Assessment Specification:
 # AGEGR9: "<18", "18 - 50", ">50" # AGEGR9N: 1, 2, 3
@@ -99,8 +101,6 @@ cat("Step 2 Complete\n\n")
 
 #--- 3: Derive TRTSDTM and TRTSTMF (Treatment Start DateTime) ---
 
-cat("Step 3: Deriving treatment start datetime with imputation...\n")
-
 # Per Assessment Specification:
 # TRTSDTM: Treatment start datetime with valid dose & complete datepart(exstdtc)
 # TRTSTMF: Imputation flag - ONLY set when hours or minutes imputed
@@ -136,6 +136,7 @@ ex %>%
 cat("  EX dataset prepared with datetime variables\n")
 
 
+
 ##3b: Derive treatment start datetime (first valid dose)
 
 adsl <- adsl %>%
@@ -161,21 +162,22 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
 ## 3c: Derive treatment start date (without time)
   adsl <- adsl %>%
      derive_vars_dtm_to_dt(source_vars = exprs(TRTSDTM))
+  
 
   
   
 
+  
   
 #--- 4: Derive ITTFL (Intent-to-Treat Flag) ---
   
   # Per Assessment Specification:
   # ITTFL = "Y" if ARM is not missing 
   # ITTFL = "N" if ARM is missing
-  
   # HOWEVER, based on clinical trial standards and common ITT population definition:
-  # - ITT typically includes only RANDOMIZED subjects (those assigned to treatment arms)
-  # - Screen failures have ARM populated but were NOT randomized
-  # -Decision: Set ITTFL = "N" for screen failures even though ARM is not missing
+  # ITT typically includes only RANDOMIZED subjects (those assigned to treatment arms)
+  # Screen failures have ARM populated but were NOT randomized
+  # Decision: Set ITTFL = "N" for screen failures even though ARM is not missing
   
   
   adsl <- adsl %>%
@@ -197,8 +199,100 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
   
 
   
+#--- 5: Derive LSTAVLDT (Last Known Alive Date) ---
+
+  # Per Assessment Specification:
+  # LSTAVLDT = Latest date from ANY of these sources:
+  # 1. Last VS date with valid result)(VSTRESC/N not missing and VSDTC not missing)
+  # 2. Last AE onset date (AESTDTC with complete date)
+  # 3. Last disposition date (DSSTDTC with complete date)
+  # 4. Last treatment date (from TRTEDTM)
+
+  
+## 5a Extract last vital signs date with valid result
+  
+  vs_dates <- vs %>%
+    filter(!is.na(VSSTRESN) | !is.na(VSSTRESC)) %>%
+    derive_vars_dt(      # Convert character date to numeric date
+      dtc = VSDTC,
+      new_vars_prefix = "VS"
+    ) %>%
+    filter(!is.na(VSDT)) %>%   # Keep only complete dates
+    group_by(STUDYID, USUBJID) %>%
+    summarise(last_vs_dt = max(VSDT, na.rm = TRUE), .groups = "drop") # Get last (maximum) date per subject
   
   
+  cat("    Found VS dates for", nrow(vs_dates), "subjects\n") #252 subjects consistent with patients with assigned treatments
+  
+  
+  
+## 5b: Extract last AE onset date
+  
+  ae_dates <- ae %>%
+    derive_vars_dt(
+      dtc = AESTDTC,   # Convert AE start date to numeric date
+      new_vars_prefix = "AE"
+    ) %>%
+    filter(!is.na(AEDT)) %>%  # Keep only complete dates
+    group_by(STUDYID, USUBJID) %>%
+    summarise(last_ae_dt = max(AEDT, na.rm = TRUE), .groups = "drop")  # Get last date per subject
+  
+  cat("    Found AE dates for", nrow(ae_dates), "subjects\n")
 
+  
+  
+##5c: Extract last disposition date
+  
+  ds_dates <- ds %>%
+    derive_vars_dt(
+      dtc = DSSTDTC, # Convert DS start date to numeric date
+      new_vars_prefix = "DS"
+    ) %>%
+    filter(!is.na(DSDT)) %>%   # Keep only complete dates
+    group_by(STUDYID, USUBJID) %>%
+    summarise(last_ds_dt = max(DSDT, na.rm = TRUE), .groups = "drop") # Get last date per subject
+  
+  cat("    Found DS dates for", nrow(ds_dates), "subjects\n")
 
+  
+  
+## 5d: We need treatment END date first
+  
+  adsl <- adsl %>%
+    derive_vars_merged(
+      dataset_add = ex_ext,
+      filter_add = (EXDOSE > 0 | 
+                      (EXDOSE == 0 & str_detect(EXTRT, "PLACEBO"))) & 
+        !is.na(EXENDTM),
+      new_vars = exprs(TRTEDTM = EXENDTM),
+      order = exprs(EXENDTM, EXSEQ),
+      mode = "last",  # Take last (latest) exposure
+      by_vars = exprs(STUDYID, USUBJID)
+    ) %>%
+    derive_vars_dtm_to_dt(source_vars = exprs(TRTEDTM))  # Convert treatment end datetime to date
+  
+ 
+  
+  
+## 5e: Merge all date sources and compute maximum
 
+  adsl <- adsl %>%
+    left_join(vs_dates, by = c("STUDYID", "USUBJID")) %>%     # Merge VS dates
+    left_join(ae_dates, by = c("STUDYID", "USUBJID")) %>%     # Merge AE dates
+    left_join(ds_dates, by = c("STUDYID", "USUBJID")) %>%     # Merge DS dates
+    rowwise() %>%
+    mutate(
+      LSTAVLDT = max(c(last_vs_dt, last_ae_dt, last_ds_dt, TRTEDT), na.rm = TRUE) # Take max across all 4 sources, ignoring NA values
+         ) %>%
+      ungroup() %>%
+      mutate(
+      # If max() returns -Inf (all dates were NA), set to NA
+      LSTAVLDT = if_else(is.infinite(LSTAVLDT), as.Date(NA), LSTAVLDT)
+    ) %>%
+
+    select(-last_vs_dt, -last_ae_dt, -last_ds_dt)  # Clean up temporary date columns
+  
+    cat("  LSTAVLDT derived for", sum(!is.na(adsl$LSTAVLDT)), "subjects\n")
+
+    
+    
