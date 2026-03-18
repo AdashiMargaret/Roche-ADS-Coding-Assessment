@@ -15,13 +15,14 @@
 
 # Install and Load packages
 
-install.packages(c("admiral", "lubridate","stringr"))
+install.packages(c("admiral", "lubridate","stringr", "xportr", "labelled"))
 library(admiral)
 library(pharmaversesdtm)
 library(dplyr)
 library(tidyr)
 library(lubridate)
 library(stringr)
+library(xportr)
 
 #--- 1: Load SDTM Input Datasets ---
 
@@ -197,6 +198,7 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
   print(table(adsl$ARM, adsl$ITTFL, useNA = "ifany"))
   
   
+  
 
   
 #--- 5: Derive LSTAVLDT (Last Known Alive Date) ---
@@ -296,3 +298,65 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
 
     
     
+    
+
+
+#--- 6: Add Some Essential Standard ADSL Variables to make dataset more well rounded ---
+    #opportunity to practice more admiral functions
+    
+## Treatment duration (days on treatment)
+## Uses admiral function to calculate TRTEDT - TRTSDT + 1
+    
+    adsl <- adsl %>%
+      derive_var_trtdurd()
+    
+    # Treatment variables (planned and actual)
+    adsl <- adsl %>%
+      mutate(
+        TRT01P = ARM,    # Planned treatment 
+        TRT01A = ACTARM  # Actual treatment 
+      )
+    
+    cat("  TRTDURD derived for", sum(!is.na(adsl$TRTDURD)), "subjects\n")
+    
+    
+    
+    
+    
+    
+    
+    
+#--- Step 7: Add Variable Labels to make ADSL coherent ---
+#     Using ADAM IG V1.3 for new variable labels 
+    
+    library(labelled)
+    
+    adsl <- adsl %>%
+      set_variable_labels(
+        AGEGR9 = "Pooled Age Group 9",
+        AGEGR9N = "Pooled Age Group 9 (N)",
+        
+        # Treatment Start/End Dates and Times (Assessment Requirement)
+        TRTSDTM = "Datetime of First Exposure to Treatment",
+        TRTSTMF = "Time of First Exposure Imput. Flag",
+        TRTSDT = "Date of First Exposure to Treatment",
+        TRTEDTM = "Datetime of Last Exposure to Treatment",
+        TRTEDT = "Date of Last Exposure to Treatment",
+        TRTDURD = "Total Treatment Duration (Days)",
+        
+        # Treatment Variables
+        TRT01P = "Planned Treatment for Period 01",
+        TRT01A = "Actual Treatment for Period 01",
+        
+        # Intent-to-Treat Flag (Assessment Requirement)
+        ITTFL = "Intent-to-Treat Population Flag",
+        
+        # Last Known Alive Date (Assessment Requirement)
+        LSTAVLDT = "Date Last Known Alive"
+      )
+    
+    cat("  Labels added for custom derived variables\n")
+    
+    
+    print(adsl)
+  
