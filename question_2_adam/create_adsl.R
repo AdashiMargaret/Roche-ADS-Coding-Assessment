@@ -162,8 +162,43 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
   adsl <- adsl %>%
      derive_vars_dtm_to_dt(source_vars = exprs(TRTSDTM))
 
+  
+  
 
+  
+#--- 4: Derive ITTFL (Intent-to-Treat Flag) ---
+  
+  # Per Assessment Specification:
+  # ITTFL = "Y" if ARM is not missing 
+  # ITTFL = "N" if ARM is missing
+  
+  # HOWEVER, based on clinical trial standards and common ITT population definition:
+  # - ITT typically includes only RANDOMIZED subjects (those assigned to treatment arms)
+  # - Screen failures have ARM populated but were NOT randomized
+  # -Decision: Set ITTFL = "N" for screen failures even though ARM is not missing
+  
+  
+  adsl <- adsl %>%
+    mutate(
+      ITTFL = if_else(
+        !is.na(ARM) & !ARM %in% c("Screen Failure", "Not Assigned", "Not Treated"),
+        "Y",
+        "N"
+      )
+    )
+  
+ ##Verify the derivation
+  cat("  ITTFL frequency:\n")
+  print(table(adsl$ITTFL, useNA = "ifany"))
+  
+  cat("  ITTFL by ARM:\n")
+  print(table(adsl$ARM, adsl$ITTFL, useNA = "ifany"))
+  
+  
 
+  
+  
+  
 
 
 
