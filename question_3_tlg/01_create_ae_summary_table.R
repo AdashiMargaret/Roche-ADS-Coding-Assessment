@@ -57,7 +57,7 @@ str(adae[, c("USUBJID", "TRTEMFL", "ACTARM", "AESOC", "AETERM")])
 
 #---2. filter data for analysis---
 
-# Filter ADSL: Safety population only (this automatically excludes Screen Failures)
+## Filter ADSL: Safety population only (this automatically excludes Screen Failures)
 adsl_filtered <- adsl %>%
   filter(SAFFL == "Y")
 
@@ -66,7 +66,7 @@ print(table(adsl_filtered$ACTARM))
 cat("\n")
 
 
-# Filter ADAE: Treatment-emergent AEs, Safety population
+## Filter ADAE: Treatment-emergent AEs, Safety population
 
 adae_filtered <- adae %>%
   filter(TRTEMFL == "Y",
@@ -77,12 +77,44 @@ cat("Treatment groups in filtered ADAE:\n")
 print(table(adae_filtered$ACTARM))
 
 
-# Count unique subjects per treatment group (for denominator)
+## Count unique subjects per treatment group (for denominator)
 n_subjects <- adsl_filtered %>%
   count(ACTARM, name = "N")
 
 print(n_subjects)
 cat("\n")
+
+
+
+
+#---3. Create hierarchical Adverse Event Table---
+
+##Structure: System Organ Class (AESOC) → Reported Term (AETERM)
+tbl_ae <- adae_filtered %>%
+  tbl_hierarchical(
+    variables = c(AESOC, AETERM),   # Hierarchy: SOC → Reported Term
+    by = ACTARM,                     # Split by treatment arm
+    id = USUBJID,                    # Subject identifier
+    denominator = adsl_filtered,     # Use filtered ADSL for denominators
+    overall_row = TRUE,              # Add "Any TEAE" summary row at top
+    label = list(
+      "..ard_hierarchical_overall.." = "Treatment Emergent AEs"
+    )
+  ) %>%
+  add_overall(last = TRUE) %>%       # Add "Overall" column at the end
+  bold_labels() %>%
+  modify_header(
+    all_stat_cols() ~ "**{level}**<br>N = {n}"
+  ) %>%
+  modify_footnote(
+    all_stat_cols() ~ "n (%)"
+  )
+##sort by descending frequency
+tbl_ae <- sort_hierarchical(tbl_ae, sort = everything() ~ "descending")
+
+##Display the table
+cat("Treatment-Emergent Adverse Events Summary Table:\n\n")
+print(tbl_ae)
 
 
 
