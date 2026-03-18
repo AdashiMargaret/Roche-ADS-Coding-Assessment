@@ -79,14 +79,14 @@ format_agegr9n <- function(age) {
   )
 }
 
-# Apply the functions to create age groups
+## Apply the functions to create age groups
 adsl <- adsl %>%
   mutate(
     AGEGR9 = format_agegr9(AGE),
     AGEGR9N = format_agegr9n(AGE)
   )
 
-# Verify the derivation
+## Verify the derivation
 
 print(table(adsl$AGEGR9, useNA = "ifany"))
 print(table(adsl$AGEGR9N, useNA = "ifany"))
@@ -94,7 +94,75 @@ print(table(adsl$AGEGR9N, useNA = "ifany"))
 cat("Step 2 Complete\n\n")
 
 
+
   
+
+#--- 3: Derive TRTSDTM and TRTSTMF (Treatment Start DateTime) ---
+
+cat("Step 3: Deriving treatment start datetime with imputation...\n")
+
+# Per Assessment Specification:
+# TRTSDTM: Treatment start datetime with valid dose & complete datepart(exstdtc)
+# TRTSTMF: Imputation flag - ONLY set when hours or minutes imputed
+#          (NOT set if only seconds are imputed)
+#
+# Valid Dose Definition:
+#   - EXDOSE > 0, OR
+#   - EXDOSE = 0 AND EXTRT contains "PLACEBO"
+
+## Diagnostic: Sample of original EXSTDTC values to see if we have partial times
+
+ex %>% 
+  filter(EXDOSE > 0 | (EXDOSE == 0 & str_detect(EXTRT, "PLACEBO"))) %>%
+  select(USUBJID, EXSTDTC, EXDOSE) %>%
+  head(20)
+
+## 3a: Convert EX dates to datetimes with imputation
+
+  ex_ext <- ex %>%
+  derive_vars_dtm(
+    dtc = EXSTDTC,            # Source: EX start date/time character
+    new_vars_prefix = "EXST", # Creates: EXSTDTM, EXSTTMF
+    highest_imputation = "M", # Allow imputation up to minute level
+    time_imputation = "first" # Impute missing time as 00:00:00
+  ) %>%
+  derive_vars_dtm(
+    dtc = EXENDTC,
+    new_vars_prefix = "EXEN",
+    highest_imputation = "M",
+    time_imputation = "last"  # Impute end time as 23:59:59
+  )
+
+cat("  EX dataset prepared with datetime variables\n")
+
+
+##3b: Derive treatment start datetime (first valid dose)
+
+adsl <- adsl %>%
+  derive_vars_merged(
+    dataset_add = ex_ext,
+    filter_add = (EXDOSE > 0 | 
+                    (EXDOSE == 0 & str_detect(EXTRT, "PLACEBO"))) & 
+      !is.na(EXSTDTM),
+    # Merge these variables from EX to ADSL
+    new_vars = exprs(TRTSDTM = EXSTDTM, TRTSTMF = EXSTTMF),
+    # Sort by datetime, then sequence to get first exposure
+    order = exprs(EXSTDTM, EXSEQ),
+    mode = "first",  # Take first (earliest) record
+    by_vars = exprs(STUDYID, USUBJID)
+  )
+
+## Check how many subjects have TRTSDTM
+cat("  TRTSDTM derived for", sum(!is.na(adsl$TRTSDTM)), "subjects\n")
+cat("  TRTSTMF flag frequency:\n")
+print(table(adsl$TRTSTMF, useNA = "ifany"))
+
+
+## 3c: Derive treatment start date (without time)
+  adsl <- adsl %>%
+     derive_vars_dtm_to_dt(source_vars = exprs(TRTSDTM))
+
+
 
 
 
