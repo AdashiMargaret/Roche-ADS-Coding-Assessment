@@ -386,6 +386,7 @@ print(table(adsl$TRTSTMF, useNA = "ifany"))
     cat("ADaM ADSL Dataset Creation Log\n")
     cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
     cat("Script: create_adsl.R\n")
+    cat("Author:Adashi Odama")
     cat("============================================================\n\n")
     
     cat("SUMMARY OF DERIVATIONS\n")

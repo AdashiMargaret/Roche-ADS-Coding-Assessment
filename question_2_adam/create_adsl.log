@@ -1,0 +1,35 @@
+============================================================
+ADaM ADSL Dataset Creation Log
+Date: 2026-03-18 08:57:07 
+Script: create_adsl.R
+Author:Adashi Odama============================================================
+
+SUMMARY OF DERIVATIONS
+----------------------
+Total Subjects: 306 
+Total Variables: 37 
+
+CUSTOM DERIVED VARIABLES
+------------------------
+1. AGEGR9 & AGEGR9N - Age Grouping
+
+    >50 18 - 50 
+    305       1 
+
+2. TRTSDTM & TRTSTMF - Treatment Start DateTime
+   Subjects with TRTSDTM: 254 
+   TRTSTMF frequency:
+
+   H <NA> 
+ 254   52 
+
+3. ITTFL - Intent-to-Treat Flag
+
+  N   Y 
+ 52 254 
+
+4. LSTAVLDT - Date Last Known Alive   Subjects with LSTAVLDT: 306 
+
+============================================================
+STATUS: COMPLETED SUCCESSFULLY
+============================================================
