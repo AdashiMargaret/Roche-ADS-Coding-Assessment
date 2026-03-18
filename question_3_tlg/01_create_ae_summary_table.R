@@ -54,3 +54,35 @@ str(adae[, c("USUBJID", "TRTEMFL", "ACTARM", "AESOC", "AETERM")])
 
 
 
+
+#---2. filter data for analysis---
+
+# Filter ADSL: Safety population only (this automatically excludes Screen Failures)
+adsl_filtered <- adsl %>%
+  filter(SAFFL == "Y")
+
+cat("ADSL after filtering (Safety Population):\n")
+print(table(adsl_filtered$ACTARM))
+cat("\n")
+
+
+# Filter ADAE: Treatment-emergent AEs, Safety population
+
+adae_filtered <- adae %>%
+  filter(TRTEMFL == "Y",
+         SAFFL == "Y")
+
+cat("ADAE after filtering:", nrow(adae_filtered), "records\n")
+cat("Treatment groups in filtered ADAE:\n")
+print(table(adae_filtered$ACTARM))
+
+
+# Count unique subjects per treatment group (for denominator)
+n_subjects <- adsl_filtered %>%
+  count(ACTARM, name = "N")
+
+print(n_subjects)
+cat("\n")
+
+
+
