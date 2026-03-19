@@ -170,22 +170,61 @@ roche-ads-coding-assessment/
 ---
 ---
 
-## Question 3: TLG - Adverse Events Reporting (`question_3_tlg/`)
+## Question 3: TLG - Adverse Events Reporting ✅ COMPLETE
 
-**Objective:** Create a summary table and visualizations for adverse events using `{gtsummary}` and `{ggplot2}`.
+### Overview
+Created Tables, Listings, and Graphs (TLG) for adverse events analysis using pharmaverse packages.
 
-| File | Description |
-|------|-------------|
-| `01_create_ae_summary_table.R` | Script to create TEAE summary table |
-| `02_create_visualizations.R` | Script to create AE visualizations |
-| `ae_summary_table.html` | Output summary table |
-| `ae_severity_by_treatment.png` | Plot 1: AE severity distribution by treatment arm |
-| `top10_ae_incidence.png` | Plot 2: Top 10 most frequent AEs with 95% CI |
-| `*.log` | Log files confirming error-free execution |
+### Deliverables
 
-**Input datasets:** `pharmaverseadam::adae`, `pharmaverseadam::adsl`
-**Key packages:** `gtsummary`, `ggplot2`, `dplyr`
+#### Task 1: Summary Table (gtsummary)
+- **Script**: `question_3_tlg/01_create_ae_summary_table.R`
+- **Output**: `question_3_tlg/ae_summary_table.html`
+- **Log**: `question_3_tlg/01_create_ae_summary_table.log`
 
+**Features:**
+- Hierarchical table: System Organ Class (AESOC) → Reported Term (AETERM)
+- Treatment columns: Placebo, Xanomeline High Dose, Xanomeline Low Dose, Overall
+- Sorted by descending frequency
+- Shows n (%) for each treatment group + Overall Column
+- 217 subjects (85%) with at least one treatment-emergent AE
+
+**Packages Used:** `{gtsummary}`, `{dplyr}`, `{gt}`
+
+---
+
+#### Task 2: Visualizations (ggplot2)
+- **Script**: `question_3_tlg/02_create_visualizations.R`
+- **Log**: `question_3_tlg/02_create_visualizations.log`
+
+##### Plot 1: AE Severity Distribution by Treatment
+- **Output**: `question_3_tlg/ae_severity_by_treatment.png`
+- Stacked bar chart showing MILD, MODERATE, SEVERE distributions
+- Bar chart colors consistent with sample: MILD (red), MODERATE (green), SEVERE (blue)
+- Gray shaded background (gray90)
+
+##### Plot 2: Top 10 Most Frequent AEs with 95% CI
+- **Output**: `question_3_tlg/top10_ae_incidence.png`
+- plot with 95% confidence intervals
+- N = 225 subjects, Clopper CIs
+
+**Packages Used:** `{ggplot2}`, `{dplyr}`
+
+---
+
+### Data Filtering
+- **Safety Population**: `SAFFL == "Y"` (excludes screen failures)
+- **Table**: Treatment-emergent AEs (`TRTEMFL == "Y"`)
+- **Plots**: All AEs in safety population
+
+### Key Learnings
+- `tbl_hierarchical()` for nested SOC → Term tables
+- `sort_hierarchical()` for frequency-based ordering
+- `coord_flip()` for vertical forest plots
+- Manual 95% CI calculation for proportions
+- `scale_y_continuous()` for percentage formatting
+
+---
 ---
 
 ## Question 4: GenAI Clinical Data Assistant (`question_4_python/`) *(Bonus)*
