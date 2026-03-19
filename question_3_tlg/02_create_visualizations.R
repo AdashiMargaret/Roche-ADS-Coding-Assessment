@@ -36,6 +36,9 @@ library(dplyr)            # For data manipulation
 ## Load datasets
   adae <- pharmaverseadam::adae
 
+## Filter data (safety population)
+adae_filtered <- adae %>%
+  filter(SAFFL == "Y")
 
 ## Explore AESEV variable
   cat("AESEV (Severity) levels:\n")
@@ -97,5 +100,33 @@ library(dplyr)            # For data manipulation
   )
   
   cat("\n✓ Plot 1 saved as: ae_severity_by_treatment.png\n\n")
+  
+  
+  
+  
+  
+#---Step 3: Create Plot 2 - Top 10 Most Frequent AEs with 95% CI---
+  
+  
+## Get unique subject-AE combinations 
+    ae_subject_level <- adae_filtered %>%
+    distinct(USUBJID, AETERM)
+  
+## Count subjects per AE term and calculate proportions
+  ae_freq <- ae_subject_level %>%
+    count(AETERM, name = "subjects") %>%
+    arrange(desc(subjects)) %>%
+    head(10)  # Get top 10
+  
+##view data
+  cat("Top 10 AE frequencies\n")
+  print (ae_freq)
+  
+  
+## Calculate total subjects for proportion
+  total_subjects <- n_distinct(adae_filtered$USUBJID)
+  
+cat("Total subjects in analysis:", total_subjects, "\n\n")
+  
   
 
