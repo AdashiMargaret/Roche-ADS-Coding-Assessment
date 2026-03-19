@@ -10,29 +10,36 @@ Solutions to the Roche ADS Programmer Coding Assessment covering Pharmaverse (R)
 |---|----------|--------|
 | 1 | SDTM DS Domain Creation | ✅ Complete |
 | 2 | ADaM ADSL Dataset Creation | ✅ Complete |
-| 3 | TLG – Adverse Events Reporting | 🔄 In Progress |
-| 4 | GenAI Clinical Data Assistant *(Bonus)* | 🔄 In Progress |
+| 3 | TLG – Adverse Events Reporting | ✅ Complete
+| 4 | GenAI Clinical Data Assistant   | 🔄 In Progress |
 
 ---
-
+ 
 ## Repository Structure
 
 ```
 roche-ads-coding-assessment/
 ├── question_1_sdtm/          # Q1: SDTM DS Domain Creation
 │   ├── 01_create_ds_domain.R             # DS dataset creation script
+│   ├── 01_create_ds_domain.log           # Execution log
 │   └── output/
 │       ├── ds_domain.rds                 # DS dataset with labels (R format)
 │       └── ds_domain.csv                 # DS dataset (CSV format)
-        └── 01_create_ds_domain.log       # Execution log
 ├── question_2_adam/          # Q2: ADaM ADSL Dataset Creation
-│   ├── create_adsl.R         # ADSL dataset creation script
-│   ├── adsl.rds              # ADSL dataset with labels (R format)
-│   ├── adsl.csv              # ADSL dataset (CSV format)
-│   └── create_adsl.log       # Execution log
+│   ├── create_adsl.R                     # ADSL dataset creation script
+│   ├── create_adsl.log                   # Execution log
+│   ├── adsl.rds                          # ADSL dataset with labels (R format)
+│   └── adsl.csv                          # ADSL dataset (CSV format)
 ├── question_3_tlg/           # Q3: TLG - Adverse Events Reporting
-├── question_4_python/        # Q4 (Bonus): GenAI Clinical Data Assistant
-└── README.md
+│   ├── 01_create_ae_summary_table.R      # AE summary table script
+│   ├── 01_create_ae_summary_table.log    # Table creation log
+│   ├── ae_summary_table.html             # AE summary table (HTML)
+│   ├── 02_create_visualizations.R        # AE visualizations script
+│   ├── 02_create_visualizations.log      # Visualization creation log
+│   ├── ae_severity_by_treatment.png      # Plot 1: Severity distribution
+│   └── top10_ae_incidence.png            # Plot 2: Top 10 AEs with 95% CI
+├── question_4_python/        # Q4: GenAI Clinical Data Assistant
+└── README.md                 # Project documentation
 ```
 
 ---
