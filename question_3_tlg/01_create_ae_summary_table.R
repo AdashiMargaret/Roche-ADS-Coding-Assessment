@@ -118,3 +118,14 @@ print(tbl_ae)
 
 
 
+
+#---Step 4: Save the Table as HTML
+
+
+# Save as HTML file
+tbl_ae %>%
+  as_gt() %>%
+  gt::gtsave(filename = "ae_summary_table.html")
+
+
+
