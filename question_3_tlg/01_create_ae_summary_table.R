@@ -11,6 +11,21 @@
 #------------------------------------------------------------------------------
 
 
+# Start logging
+log_file <- "01_create_ae_summary_table.log"
+sink(log_file, split = TRUE)  # split = TRUE sends output to both console and log file
+
+cat("================================================================================\n")
+cat("Script: 01_create_ae_summary_table.R\n")
+cat("Author : Adashi Odama\n")
+cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
+cat("================================================================================\n\n")
+
+
+
+
+
+
 # Install and Load packages
 
 install.packages(c("dplyr", "pharmaverseadam","gtsummary", "gt"))
@@ -128,4 +143,26 @@ tbl_ae %>%
   gt::gtsave(filename = "ae_summary_table.html")
 
 
+
+
+
+
+
+
+
+#Continue Logging
+## Note in log file
+cat("\n[NOTE] Full formatted table has been saved to: ae_summary_table.html\n")
+cat("       View the HTML file to see the complete formatted table.\n\n")
+
+cat("\n================================================================================\n")
+cat("Script completed successfully!\n")
+cat("Author : Adashi Odama\n")
+cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
+cat("================================================================================\n")
+
+# Stop logging
+sink()
+
+cat("Log file saved as:", log_file, "\n")
 

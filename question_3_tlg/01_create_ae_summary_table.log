@@ -1,0 +1,63 @@
+================================================================================
+Script: 01_create_ae_summary_table.R
+Author : Adashi Odama
+Date: 2026-03-19 00:13:50 
+================================================================================
+
+Key ADAE variables:
+- TRTEMFL (Treatment-Emergent Flag): Y NA 
+- ACTARM (Actual Treatment): Placebo Xanomeline High Dose Xanomeline Low Dose 
+- AESOC (System Organ Class) - First 5: GENERAL DISORDERS AND ADMINISTRATION SITE CONDITIONS GASTROINTESTINAL DISORDERS SKIN AND SUBCUTANEOUS TISSUE DISORDERS CARDIAC DISORDERS INFECTIONS AND INFESTATIONS 
+- AETERM (Preferred Term) - First 5: APPLICATION SITE ERYTHEMA APPLICATION SITE PRURITUS DIARRHOEA ERYTHEMA ATRIOVENTRICULAR BLOCK SECOND DEGREE 
+
+- SAFFL (Safety Flag) in ADAE: Y 
+- SAFFL (Safety Flag) in ADSL: Y N 
+
+
+             Placebo       Screen Failure Xanomeline High Dose  Xanomeline Low Dose 
+                  86                   52                   72                   96 
+
+   Y 
+1122 
+tibble [1,191 × 5] (S3: tbl_df/tbl/data.frame)
+ $ USUBJID: chr [1:1191] "01-701-1015" "01-701-1015" "01-701-1015" "01-701-1023" ...
+  ..- attr(*, "label")= chr "Unique Subject Identifier"
+ $ TRTEMFL: chr [1:1191] "Y" "Y" "Y" "Y" ...
+  ..- attr(*, "label")= chr "Treatment Emergent Analysis Flag"
+ $ ACTARM : chr [1:1191] "Placebo" "Placebo" "Placebo" "Placebo" ...
+  ..- attr(*, "label")= chr "Description of Actual Arm"
+ $ AESOC  : chr [1:1191] "GENERAL DISORDERS AND ADMINISTRATION SITE CONDITIONS" "GENERAL DISORDERS AND ADMINISTRATION SITE CONDITIONS" "GASTROINTESTINAL DISORDERS" "SKIN AND SUBCUTANEOUS TISSUE DISORDERS" ...
+  ..- attr(*, "label")= chr "Primary System Organ Class"
+ $ AETERM : chr [1:1191] "APPLICATION SITE ERYTHEMA" "APPLICATION SITE PRURITUS" "DIARRHOEA" "ERYTHEMA" ...
+  ..- attr(*, "label")= chr "Reported Term for the Adverse Event"
+ - attr(*, "_xportr.df_arg_")= chr "ADAE"
+ - attr(*, "label")= chr "Adverse Events Analysis"
+ADSL after filtering (Safety Population):
+
+             Placebo Xanomeline High Dose  Xanomeline Low Dose 
+                  86                   72                   96 
+
+ADAE after filtering: 1122 records
+Treatment groups in filtered ADAE:
+
+             Placebo Xanomeline High Dose  Xanomeline Low Dose 
+                 281                  414                  427 
+# A tibble: 3 × 2
+  ACTARM                   N
+  <chr>                <int>
+1 Placebo                 86
+2 Xanomeline High Dose    72
+3 Xanomeline Low Dose     96
+
+Treatment-Emergent Adverse Events Summary Table:
+
+
+[NOTE] Full formatted table has been saved to: ae_summary_table.html
+       View the HTML file to see the complete formatted table.
+
+
+================================================================================
+Script completed successfully!
+Author : Adashi Odama
+Date: 2026-03-19 00:14:04 
+================================================================================
