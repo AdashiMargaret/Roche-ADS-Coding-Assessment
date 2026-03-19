@@ -18,6 +18,7 @@ sink(log_file, split = TRUE)
 
 cat("================================================================================\n")
 cat("Script: 02_create_visualizations.R\n")
+cat("Author: Adashi Odama\n")
 cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
 cat("================================================================================\n\n")
 
@@ -36,7 +37,7 @@ library(dplyr)            # For data manipulation
 ## Load datasets
   adae <- pharmaverseadam::adae
 
-## Filter data (safety population)
+## Filter data (SAFFL). Only focusing on safety because there is no mention of TEAE consideration
 adae_filtered <- adae %>%
   filter(SAFFL == "Y")
 
@@ -55,7 +56,7 @@ adae_filtered <- adae %>%
   
   
 
-#---Step 2: Create Plot 1 - AE Severity Distribution by Treatment---
+#---2: Create Plot 1 - AE Severity Distribution by Treatment---
   severity_data <- adae_filtered %>%
     count(ACTARM, AESEV, name = "n_events")
   
@@ -105,7 +106,7 @@ adae_filtered <- adae %>%
   
   
   
-#---Step 3: Create Plot 2 - Top 10 Most Frequent AEs with 95% CI---
+#---3: Create Plot 2 - Top 10 Most Frequent AEs with 95% CI---
   
   
 ## Get unique subject-AE combinations 
@@ -128,5 +129,79 @@ adae_filtered <- adae %>%
   
 cat("Total subjects in analysis:", total_subjects, "\n\n")
   
-  
 
+
+
+#---4 Add proportion and 95% CI--
+
+##Calculate CIs
+
+ ae_freq <- ae_freq %>%
+   mutate(
+    prop = subjects / total_subjects,
+    # Calculate 95% CI using binomial proportion
+    ci_lower = (prop - 1.96 * sqrt(prop * (1 - prop) / total_subjects))*100,
+    ci_upper = (prop + 1.96 * sqrt(prop * (1 - prop) / total_subjects))*100
+  )
+
+cat("Top 10 Most Frequent Adverse Events")
+print(ae_freq)
+cat("\n")
+
+##plot CI using geom_errorbar()
+
+plot2 <- ggplot(ae_freq, aes(x = reorder(AETERM, prop), y = prop*100)) +
+         geom_point(size = 3) +
+         geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+         coord_flip() +  # Flip coordinates to make it vertical
+         scale_y_continuous(labels = function(x) paste0(x, "%")) +  # Add % to labels
+         labs(
+         title = "Top 10 Most Frequent Adverse Events",
+         subtitle = paste0("n= ", total_subjects, " subjects; 95% Clopper-Pearson CIs"),
+         x = "",
+         y = "Percentage of Patients(%)"
+         ) +
+         theme(
+         plot.title = element_text(hjust = 0, size = 14),
+         plot.subtitle = element_text(hjust = 0, size = 12),
+         panel.background = element_rect(fill = "gray95"), # include gray background
+         panel.grid.major = element_line(color = "white"),# White minor gridlines
+         axis.title.x = element_text(hjust = 0.6) # to align axis title a bit more closely to sample
+         )
+
+
+print (plot2)
+
+
+## Save plot
+  ggsave(
+     filename = "top10_ae_incidence.png",
+     plot = plot2,
+     width = 10,
+     height = 6,
+     dpi = 300
+     )
+
+cat("\n✓ Plot 2 saved as: top10_ae_incidence.png\n\n")
+
+
+
+
+
+#------------------------------------------------------------------------------
+# End of Script
+#------------------------------------------------------------------------------
+
+cat("\n================================================================================\n")
+cat("Script completed successfully!\n")
+cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
+cat("Author: Adashi Odama\n")
+cat("\nOutputs created:\n")
+cat("  - ae_severity_by_treatment.png\n")
+cat("  - top10_ae_incidence.png\n")
+cat("================================================================================\n")
+
+# Stop logging
+sink()
+
+cat("Log file saved as:", log_file, "\n")
