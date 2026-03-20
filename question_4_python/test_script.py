@@ -26,12 +26,12 @@ import json
 #------------------------------------------------------------------------------
 
 
-file_path = "/adae.csv"
+file_path = "/content/adae.csv"
 
 adae = pd.read_csv(file_path)
 
 print(f"✓ Loaded from: {file_path}")
-print(f"✓ Loaded ADAE dataset: {len(adae)} records, {adae['USUBJID'].nunique()} subjects\n")
+
 
 #------------------------------------------------------------------------------
 # Define Schema
@@ -88,7 +88,6 @@ class ClinicalTrialDataAgent:
         result = {
             "target_column": None,
             "filter_value": None,
-            "reasoning": ""
                   }
 
         # Check for severity
@@ -100,21 +99,18 @@ class ClinicalTrialDataAgent:
                 result['filter_value'] = 'MODERATE'
             elif 'severe' in question_lower:
                 result['filter_value'] = 'SEVERE'
-            result['reasoning'] = f"Detected severity → AESEV={result['filter_value']}"
             return result
 
         # Check for treatment-emergent
         if any(phrase in question_lower for phrase in ['treatment emergent', 'treatment-emergent', 'teae', 'emergent']):
             result['target_column'] = 'TRTEMFL'
             result['filter_value'] = 'Y'
-            result['reasoning'] = "Detected treatment-emergent → TRTEMFL='Y'"
             return result
 
         # Check for safety population
         if 'safety population' in question_lower or 'safety flag' in question_lower:
             result['target_column'] = 'SAFFL'
             result['filter_value'] = 'Y'
-            result['reasoning'] = "Detected safety population → SAFFL='Y'"
             return result
 
         # Check for System Organ Class
@@ -132,7 +128,6 @@ class ClinicalTrialDataAgent:
             if keyword in question_lower:
                 result['target_column'] = 'AESOC'
                 result['filter_value'] = soc_value
-                result['reasoning'] = f"Detected organ system → AESOC='{soc_value}'"
                 return result
 
         # Check for specific AE terms
@@ -151,7 +146,6 @@ class ClinicalTrialDataAgent:
             if keyword in question_lower:
                 result['target_column'] = 'AETERM'
                 result['filter_value'] = term_value
-                result['reasoning'] = f"Detected condition → AETERM='{term_value}'"
                 return result
 
         result['reasoning'] = "Could not identify filter criteria"
@@ -220,7 +214,6 @@ for i, question in enumerate(test_queries, 1):
     print(f"Parsed Output:")
     print(f"  Target Column: {parsed['target_column']}")
     print(f"  Filter Value: {parsed['filter_value']}")
-    print(f"  Reasoning: {parsed['reasoning']}\n")
 
     # Execute the query
     results = query_exec(parsed, adae)
