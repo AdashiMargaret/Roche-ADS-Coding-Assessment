@@ -310,3 +310,7 @@ pip install pandas
 - Log files serve as evidence of error-free execution
 - RDS files preserve variable labels and R data types; CSV files for easy viewing
 - CDISC standards (SDTM IG v3.4, ADaM IG) were referenced throughout
+
+## Acknowledgments
+
+AI assistance (Claude) was used for initial repository structure setup, code scaffolding, implementation guidance, and debugging support. All clinical logic, derivations, and final implementation decisions were made by the author with domain knowledge applied throughout
