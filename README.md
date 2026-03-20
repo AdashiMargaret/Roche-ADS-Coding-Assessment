@@ -11,7 +11,7 @@ Solutions to the Roche ADS Programmer Coding Assessment covering Pharmaverse (R)
 | 1 | SDTM DS Domain Creation | ✅ Complete |
 | 2 | ADaM ADSL Dataset Creation | ✅ Complete |
 | 3 | TLG – Adverse Events Reporting | ✅ Complete
-| 4 | GenAI Clinical Data Assistant   | 🔄 In Progress |
+| 4 | GenAI Clinical Data Assistant   | ✅ Complete |
 
 ---
  
@@ -39,6 +39,8 @@ roche-ads-coding-assessment/
 │   ├── ae_severity_by_treatment.png      # Plot 1: Severity distribution
 │   └── top10_ae_incidence.png            # Plot 2: Top 10 AEs with 95% CI
 ├── question_4_python/        # Q4: GenAI Clinical Data Assistant
+│   ├── clinical_data_assistant.ipynb     # Full implementation notebook
+│   └── test_script.py                    # Test script (3 queries)
 └── README.md                 # Project documentation
 ```
 
@@ -234,20 +236,44 @@ Created Tables, Listings, and Graphs (TLG) for adverse events analysis using pha
 ---
 ---
 
-## Question 4: GenAI Clinical Data Assistant (`question_4_python/`) *(Bonus)*
+## Question 4: GenAI Clinical Data Assistant ✅
 
-**Objective:** Build a Generative AI assistant that translates natural language questions into structured Pandas queries against the AE dataset.
+**Objective:** Build a GenAI assistant that translates natural language questions into structured Pandas queries for adverse event analysis.
 
+### Files
 | File | Description |
 |------|-------------|
-| `clinical_data_agent.py` | Main `ClinicalTrialDataAgent` class implementation |
-| `test_queries.py` | Test script running 3 example queries |
-| `adae.csv` | Input AE dataset |
+| `clinical_data_assistant.ipynb` | Complete implementation with data exploration and testing |
+| `test_script.py` | Standalone script running 3 example queries |
 
-**Key libraries:** `pandas`, `langchain` (or `anthropic`), `pydantic`
-**Logic flow:** Natural language → LLM → Structured JSON (`target_column`, `filter_value`) → Pandas filter → Results
+**Data source:** `pharmaverseadam::adae` (1,191 records, 225 subjects)
 
----
+### Implementation
+
+**Mock LLM Agent** (`ClinicalTrialDataAgent` class):
+- Parses natural language questions using rule-based keyword matching
+- Returns structured JSON: `target_column`, `filter_value`, `reasoning`
+- Executes Pandas filters on ADAE dataset
+- Returns count of unique subjects + complete list of USUBJIDs
+
+**Schema Definition**: Maps natural language to ADAE columns (USUBJID, AETERM, AESEV, AESOC, SAFFL, TRTEMFL)
+
+### Test Queries
+
+| Query | Target Column | Result |
+|-------|---------------|--------|
+| "Identify all subjects who experienced severe adverse events" | AESEV='SEVERE' | Severity-based filtering |
+| "Which subjects had nervous system disorders?" | AESOC='NERVOUS SYSTEM DISORDERS' | System organ class filtering |
+| "Show me all treatment-emergent adverse events" | TRTEMFL='Y' | Treatment-emergent flag filtering |
+
+**Run test script:** `cd question_4_python && python test_script.py`
+
+**Key packages:** `pandas`, `json`  
+**Logic flow:** Natural Language → Parse (Mock LLM) → Structured JSON → Pandas Filter → Results
+
+**Note:** Mock LLM implementation  demonstrates complete Prompt → Parse → Execute workflow without API dependencies.
+
+
 
 ## Setup & Requirements
 
@@ -263,7 +289,8 @@ install.packages(c("admiral", "sdtm.oak", "pharmaverseraw", "pharmaversesdtm",
 - Python 3.8+
 - Install dependencies:
 ```bash
-pip install pandas langchain anthropic pydantic
+pip install pandas
+```
 ```
 
 ---
